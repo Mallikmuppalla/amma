@@ -1,0 +1,25 @@
+FROM ubuntu
+MAINTAINER prakash
+RUN apt-get update && apt-get install curl -y && apt-get install wget -y
+RUN mkdir -p /usr/lib/jvm/java
+COPY /jdk1.8.0_231  /usr/lib/jvm/java
+RUN update-alternatives --install "/usr/bin/java" "java" "/usr/lib/jvm/java/bin/java" 1
+RUN update-alternatives --install "/usr/bin/javac" "javac" "/usr/lib/jvm/java/bin/javac" 1
+RUN update-alternatives --install "/usr/bin/javaws" "javaws" "/usr/lib/jvm/java/bin/javaws" 1
+RUN apt-get install net-tools -y
+RUN groupadd tomcat
+RUN useradd -s /bin/false -g tomcat -d /opt/tomcat tomcat
+RUN cd /tmp
+RUN apt-get update && wget http://mirrors.estointernet.in/apache/tomcat/tomcat-8/v8.5.50/bin/apache-tomcat-8.5.50.tar.gz
+RUN mkdir /opt/tomcat
+RUN tar -xvzf apache-tomcat-8.5.50.tar.gz -C /opt/tomcat --strip-components=1
+RUN cd /opt/tomcat
+RUN chgrp -R tomcat /opt/tomcat
+RUN chmod -R g+r /opt/tomcat/conf
+RUN chmod g+x /opt/tomcat/conf
+RUN chown -R tomcat /opt/tomcat/webapps/ /opt/tomcat/work/ /opt/tomcat/temp/ /opt/tomcat/logs/
+ENV JAVA_HOME=/usr/lib/jvm/java
+WORKDIR /opt/tomcat
+EXPOSE 8080
+CMD ["catalina.sh","start"]
+

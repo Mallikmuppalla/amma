@@ -1,0 +1,75 @@
+30122image: node:10.15.0
+pipelines:
+  branches:
+    Ydtwebstaging:
+    - step:
+        name: "Build"
+        script:
+          - "apt-get update -y"
+          - "cd admin/front-end/"
+          - "npm install"
+          - CI=false
+          - "npm run build"
+          - cd ..
+          - cd ..
+          - apt-get install -y zip
+          - "zip -r myapp.zip *"
+        artifacts:
+          - myapp.zip
+    - step:
+        name: "finance-planner"
+        script:
+          - "apt-get update -y"
+          - "cd finance-planner/front-end/"
+          - "npm install"
+          - CI=false
+          - "npm run build"
+          - cd ..
+          - cd ..
+          - apt-get install -y zip
+          - "zip -r myapp.zip *"
+        artifacts:
+          - myapp.zip
+    - step:
+        name: "markt"
+        script:
+          - "apt-get update -y"
+          - "cd marketing/front-end/"
+          - "npm install"
+          - CI=false
+          - "npm run build"
+          - cd ..
+          - cd ..
+          - apt-get install -y zip
+          - "zip -r myapp.zip *"
+        artifacts:
+          - myapp.zip
+    - step:
+        name: Upload to S3
+        script:
+          - pipe: atlassian/aws-code-deploy:0.2.7
+            variables:
+              AWS_DEFAULT_REGION: 'ap-southeast-2'
+              AWS_ACCESS_KEY_ID: '-----------'
+              AWS_SECRET_ACCESS_KEY: '-----------'
+              COMMAND: 'upload'
+              APPLICATION_NAME: 'YDT-AWS-APPLICATION'
+              ZIP_FILE: 'myapp.zip'
+              S3_BUCKET: '----'
+    - step:
+        name: Deploy with CodeDeploy
+        script:
+          - pipe: atlassian/aws-code-deploy:0.2.7
+            variables:
+              AWS_DEFAULT_REGION: 'ap-southeast-2'
+              AWS_ACCESS_KEY_ID: '---------'
+              AWS_SECRET_ACCESS_KEY: '------'
+              COMMAND: 'deploy'
+              APPLICATION_NAME: 'YDT-AWS-APPLICATION'
+              DEPLOYMENT_GROUP: 'DG1'
+              WAIT: 'true'
+              S3_BUCKET: '----------'
+              IGNORE_APPLICATION_STOP_FAILURES: 'true'
+              FILE_EXISTS_BEHAVIOR: 'OVERWRITE'
+           
+   DEBUG: 'true'
